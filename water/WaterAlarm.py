@@ -5,7 +5,7 @@
 
 
 import RPi.GPIO as GPIO
-import sys
+import sys, time
 
 from threading import Thread, Event
 
@@ -42,13 +42,6 @@ class WaterAlarm(Thread):
 
         super().__init__(*args, **kwargs)
 
-    def run(self):
-        while not self.stop_event.wait(self.interval):
-            if self.read_channel() == 1:
-                self.leak_counter += 1
-                if self.leak_counter >= self.alarm_threshold:
-                    self.alarm()
-
     def cleanup(self):
         GPIO.cleanup(self.ch)
         self.join()
@@ -56,17 +49,34 @@ class WaterAlarm(Thread):
     def read_channel(self):
         return GPIO.input(self.ch)
 
-    def alarm(self):
-        print('Leak!!!')
-
-
 if __name__ == '__main__':  # ensure that script is being run from terminal
     stop_event = Event()
 
     print('Initializing water leak detector...')
     alarm = WaterAlarm(stop_event, ch=int(sys.argv[1]))
     alarm.start()
+leak = 0 #Starts the counter
 
+#Following if loop establishes initial boolean
+if self.read_channel() != 1: #This indicates that the circuit is shorted, therefore there is a leak
+    dry = true 
+    print('Everything is fine')
+else:
+    dry=false
+    print('Everything is not fine')
+
+while True: #Establishes infinite loop
+    if dry == true and self.read_channel()==1:
+        leak+=1
+        dry = false
+        print ('leak #%d has started ' %leak)
+        time.sleep(2) #sleeps for two seconds
+    elif dry == false and self.read_channel!=1:
+        dry = true
+        print(' leak #%d has ended' %leak)
+        time.sleep(2)
+    else:
+        time.sleep(5)
     try:
         while True:
             pass
